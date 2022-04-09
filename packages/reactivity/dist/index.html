@@ -15,6 +15,12 @@
     const state1 = reactivity(data)
     const state2 = reactivity(state1)
     console.log(state1 === state2)
+    effect(() => {
+      var a = state1.name + state1.age
+    })
+    setTimeout(() => {
+      state1.age++
+    }, 100)
   </script>
 </body>
 </html>
