@@ -22,13 +22,18 @@ var VueReactivity = (() => {
   __export(src_exports, {
     computed: () => computed,
     effect: () => effect,
+    proxyRefs: () => proxyRefs,
     reactive: () => reactive,
+    ref: () => ref,
+    toRef: () => toRef,
+    toRefs: () => toRefs,
     watch: () => watch
   });
 
   // packages/shared/src/index.ts
   var isObject = (value) => typeof value === "object" && value !== null;
   var isFunction = (value) => typeof value === "function";
+  var isArray = (value) => Array.isArray(value);
   var noop = (cb) => {
     cb && cb();
   };
@@ -239,6 +244,72 @@ var VueReactivity = (() => {
       traveral(value[key]);
     }
     return value;
+  }
+
+  // packages/reactivity/src/ref.ts
+  function toReactive(value) {
+    return isObject(value) ? reactive(value) : value;
+  }
+  var RefImpl = class {
+    constructor(rawValue) {
+      this.rawValue = rawValue;
+      this.dep = /* @__PURE__ */ new Set();
+      this.__v_isRef = true;
+      this._value = toReactive(rawValue);
+    }
+    get value() {
+      trackEffects(this.dep);
+      return this._value;
+    }
+    set value(newValue) {
+      if (newValue !== this.rawValue) {
+        this._value = toReactive(newValue);
+        this.rawValue = newValue;
+        triggerEffects(this.dep);
+      }
+    }
+  };
+  function ref(value) {
+    return new RefImpl(value);
+  }
+  var ObjectRefImpl = class {
+    constructor(object, key) {
+      this.object = object;
+      this.key = key;
+    }
+    get value() {
+      return this.object[this.key];
+    }
+    set value(newValue) {
+      this.object[this.key] = newValue;
+    }
+  };
+  function toRef(obj, key) {
+    return new ObjectRefImpl(obj, key);
+  }
+  function toRefs(obj) {
+    const result = isArray(obj) ? new Array(obj.length) : {};
+    for (let key in obj) {
+      result[key] = toRef(obj, key);
+    }
+    return result;
+  }
+  function proxyRefs(obj) {
+    return new Proxy(obj, {
+      get(target, key, recevier) {
+        const r = Reflect.get(target, key, recevier);
+        return r.__v_isRef ? r.value : r;
+      },
+      set(target, key, value, receiver) {
+        const oldValue = target[key];
+        if (oldValue.__v_isRef) {
+          oldValue.value = value;
+          return true;
+        } else {
+          return Reflect.set(target, key, value, receiver);
+        }
+      }
+    });
   }
   return __toCommonJS(src_exports);
 })();

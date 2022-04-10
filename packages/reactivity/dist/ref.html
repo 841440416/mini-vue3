@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="./reactivity.global.js"></script>
+    <div id="app"></div>
+    <script>
+      const { ref, reactive, effect, toRefs, proxyRefs } = VueReactivity;
+      // const flag = ref(false);
+      // console.log(flag);
+      // effect(()=>{
+      //   app.innerHTML = flag.value ? '你好' : 'bye';
+      // })
+      // setTimeout(() => {
+      //   flag.value = !flag.value
+      // }, 1000)
+
+      // const hj = reactive({ name: "hj", age: 29 });
+      // const { name, age } = toRefs(hj);
+      // effect(() => {
+      //   app.innerHTML = name.value + "今年" + age.value + "岁";
+      // });
+      // setTimeout(() => {
+      //   age.value = 30;
+      // }, 1000);
+
+      let name = ref('hj')
+      let age = ref(29)
+      let hj = proxyRefs({ name, age })
+      effect(()=> {
+        app.innerHTML = hj.name + "今年" + hj.age + "岁";
+      })
+    </script>
+  </body>
+</html>
