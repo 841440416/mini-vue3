@@ -11,9 +11,11 @@
   <div id="app"></div>
   <script>
     let watching = false;
-    const { reactivity, effect } = VueReactivity;
-    const data = {flage: true, name: 'hj', age: 29}
-    const state = reactivity(data)
+    const { reactive, effect } = VueReactivity;
+    const data = {flage: true, name: 'hj', age: 29, address: {city: 'beijing'}};
+    const state = reactive(data)
+    console.log(state)
+    console.log(state.age)
     let runner = effect(() => {
       document.body.innerHTML = state.age
     }, {

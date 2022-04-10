@@ -1,5 +1,5 @@
 import { mutableHandlers, ReactiveFlags } from './baseHandler';
-import { isObject } from "./../../shared/src/index";
+import { isObject } from "../../shared/src/index";
 const reactivityMap = new WeakMap();
 
 /**
@@ -8,7 +8,7 @@ const reactivityMap = new WeakMap();
  * @param target 
  * @returns proxy
  */
-export function reactivity(target) {
+export function reactive(target) {
   if (!isObject(target)) {
     return;
   }

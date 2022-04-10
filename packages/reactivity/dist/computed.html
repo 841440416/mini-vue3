@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script src="./reactivity.global.js"></script>
+  <div id="app"></div>
+  <script>
+    const { reactive, effect, computed } = VueReactivity;
+    const data = {firstName: 'hj', lastName: 'zhao', address: {city: 'beijing'}};
+    const state = reactive(data)
+    const fullName = computed(() => {
+      return state.firstName + ' ' + state.lastName
+    })
+
+    effect(() => {
+      app.innerHTML = fullName.value
+    })
+
+    setTimeout(() => {
+      state.firstName = 'yy'
+    }, 1000)
+    // 1.fistName和lastName依赖于计算属性effect
+    // 2. 计算属性收集了外层effect
+    // 3. 依赖变化触发计算属性effect执行，然后会触发外层effect执行
+
+    // 计算属性中肯定要有一个缓存标记dirty，如果依赖有变化，重新get
+    // 计算属性是一个effect，依赖属性变化了，会更新dirty
+  </script>
+</body>
+</html>
