@@ -12,7 +12,7 @@ class ReactiveEffect {
   public deps = []; // 记录依赖的属性
   public parent = null; // 父节点
   public active = true; // 实例上新增了active属性
-  constructor(public fn) { // public：用户传递的参数会挂载this this.fn = fn
+  constructor(public fn, public scheduler) { // public：用户传递的参数会挂载this this.fn = fn
   }
   run() {
     // 未激活执行执行函数，无需依赖收集
@@ -31,12 +31,22 @@ class ReactiveEffect {
       this.parent = null;
     }
   }
+  stop() {
+    if(this.active) {
+      this.active = false;
+      cleanupEffect(this); // 停止effect收集依赖
+    }
+  }
 }
 
-export function effect(fn) {
+export function effect(fn, options: any={}) {
   // 这里fn可以根据状态变化 重新执行，effect可以嵌套
-  const _effect = new ReactiveEffect(fn);
-  _effect.run(); // 默认执行异常
+  const _effect = new ReactiveEffect(fn, options.scheduler);
+  _effect.run(); // 默认执行一次
+
+  const runner = _effect.run.bind(_effect);
+  runner.effect = _effect; // 将effect挂载到runner上
+  return runner;
 }
 
 // effect和属性是多对多关系
@@ -67,7 +77,13 @@ export function trigger(target, type, key, value, oldValue) {
     effects = new Set(effects);
     effects.forEach(effect => {
       // 执行effect的时候，需判断是否执行过，如果执行过，则不再执行
-      if(effect !== activeEffect) effect.run();
+      if(effect !== activeEffect) {
+        if(effect.scheduler) {
+          effect.scheduler(); // 执行调度
+        } else {
+          effect.run(); // 否则更新视图
+        }
+      }
     })
   }
 }

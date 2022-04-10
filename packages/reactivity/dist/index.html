@@ -10,19 +10,30 @@
   <script src="./reactivity.global.js"></script>
   <div id="app"></div>
   <script>
+    let watching = false;
     const { reactivity, effect } = VueReactivity;
     const data = {flage: true, name: 'hj', age: 29}
     const state = reactivity(data)
-    effect(() => {
-      document.body.innerHTML = state.flage ? state.name : state.age
+    let runner = effect(() => {
+      document.body.innerHTML = state.age
+    }, {
+      scheduler() {
+        console.log('scheduler')
+        if(!watching) {
+          watching = true;
+          setTimeout(() => {
+            runner()
+            watching = false;
+          }, 1000)
+        }
+      }
     })
-    setTimeout(() => {
-      state.flage = false
-      setTimeout(() => {
-        state.name = 'yy'
-        console.log('修改了name，原则不需更新');
-      }, 500);
-    }, 1000)
+
+    state.age = 2991
+    state.age = 2992
+    state.age = 2993
+    state.age = 2994
+    state.age = 2995
   </script>
 </body>
 </html>
