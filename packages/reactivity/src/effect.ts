@@ -1,3 +1,5 @@
+import { ReactiveFlags } from "./baseHandler";
+
 export let activeEffect = undefined;
 
 function cleanupEffect(effect) {
@@ -38,6 +40,10 @@ export class ReactiveEffect {
       cleanupEffect(this); // 停止effect收集依赖
     }
   }
+}
+
+export function isReactive(value) {
+  return !!(value && value[ReactiveFlags.IS_REACTIVE]);
 }
 
 export function effect(fn, options: any = {}) {
