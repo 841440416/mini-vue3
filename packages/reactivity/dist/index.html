@@ -11,16 +11,18 @@
   <div id="app"></div>
   <script>
     const { reactivity, effect } = VueReactivity;
-    const data = {name: 'hj', age: 29}
-    const state1 = reactivity(data)
-    const state2 = reactivity(state1)
-    console.log(state1 === state2)
+    const data = {flage: true, name: 'hj', age: 29}
+    const state = reactivity(data)
     effect(() => {
-      var a = state1.name + state1.age
+      document.body.innerHTML = state.flage ? state.name : state.age
     })
     setTimeout(() => {
-      state1.age++
-    }, 100)
+      state.flage = false
+      setTimeout(() => {
+        state.name = 'yy'
+        console.log('修改了name，原则不需更新');
+      }, 500);
+    }, 1000)
   </script>
 </body>
 </html>

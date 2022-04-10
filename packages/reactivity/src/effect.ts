@@ -1,4 +1,13 @@
 export let activeEffect = undefined;
+
+function cleanupEffect(effect) {
+  const { deps } = effect;
+  for(let i =0; i<deps.length; i++) {
+    // 解除effect和deps的关联，重新依赖收集
+    deps[i].delete(effect);
+  }
+  deps.length = 0;
+}
 class ReactiveEffect {
   public deps = []; // 记录依赖的属性
   public parent = null; // 父节点
@@ -14,6 +23,8 @@ class ReactiveEffect {
       this.parent = activeEffect;
       // 激活执行执行函数，依赖收集，将当前的effect和稍后渲染的属性关联
       activeEffect = this;
+      // 这里需要在执行用户的函数前，将之前收集的依赖清空
+      cleanupEffect(this)
       return this.fn();
     } finally {
       activeEffect = this.parent; // 执行完还原
@@ -50,14 +61,18 @@ export function track(target, type, key) {
 export function trigger(target, type, key, value, oldValue) {
   const depsMap = targetMap.get(target);
   if(!depsMap) return; // 触发的值不在模板中使用
-  const effects = depsMap.get(key); // 找到对应的effect
-  effects && effects.forEach(effect => {
-    // 执行effect的时候，需判断是否执行过，如果执行过，则不再执行
-    if(effect !== activeEffect) effect.run();
-  })
+  let effects = depsMap.get(key); // 找到对应的effect
+  // 在执行前先拷贝一份引用
+  if(effects) {
+    effects = new Set(effects);
+    effects.forEach(effect => {
+      // 执行effect的时候，需判断是否执行过，如果执行过，则不再执行
+      if(effect !== activeEffect) effect.run();
+    })
+  }
 }
 
-
+// effect设计流程
 // 1. 创建一个响应式对象 new proxy
 // 2. 创建一个effect, 默认数据变化渲染更新，将正在执行的effect作为全局变量，
 // 渲染（取值），在get方法中调用tracker方法中进行依赖收集
