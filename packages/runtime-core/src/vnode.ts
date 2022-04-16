@@ -1,5 +1,5 @@
-import { ShapeFlags } from "packages/shared/src/shapeFlags";
-import { isString } from "./../../shared/src/index";
+import { isString, isArray, ShapeFlags } from "@vue/shared";
+export const Text = Symbol("Text");
 export function isVnode(value) {
   return !!(value && value.__v_isVNode);
 }
@@ -24,7 +24,7 @@ export function creatVnode(type, props, children?) {
   };
   if (children) {
     let type = 0;
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       type = ShapeFlags.ARRAY_CHILDREN;
     } else {
       children = String(children);

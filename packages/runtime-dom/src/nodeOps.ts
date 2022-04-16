@@ -31,7 +31,7 @@ export const nodeOps = {
   nextSibling(node) {
     return node.nextSibling;
   },
-  ceateElement(tagName) {
+  createElement(tagName) {
     return document.createElement(tagName);
   },
   createText(text) {

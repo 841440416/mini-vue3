@@ -10,7 +10,7 @@
   <div id="app"></div>
   <script src="./runtime-dom.global.js"></script>
   <script>
-    let { render, h } = VueRuntimeDOM
+    let { createRenderer, render, h } = VueRuntimeDOM
     // 渲染虚拟dom
     // const renderer = createRenderer({
     //   createElement(el) {
@@ -26,7 +26,10 @@
     //     console.log(el, key, nextVal);
     //   }
     // })
-    render(h('h1', {style:{color: 'red'}}, 'hello'), app)
+    render(h('h1', {style:{color: 'red'},onClick:()=>alert(1)},[h('span', 'world'), '123']), app)
+    setTimeout(()=>{
+      render(null, app)
+    }, 1000)
   </script>
 </body>
 </html>

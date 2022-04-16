@@ -9,3 +9,5 @@ export const isNumber = (value) => typeof value === "number";
 export const isArray = (value) => Array.isArray(value);
 
 export const noop = (cb) => {cb && cb();};
+
+export * from './shapeFlags'

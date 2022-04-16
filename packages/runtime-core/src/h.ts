@@ -1,5 +1,4 @@
-import { isArray } from "./../../shared/src/index";
-import { isObject } from "@vue/shared";
+import { isObject, isArray } from "@vue/shared";
 import { creatVnode, isVnode } from "./vnode";
 /**
  * 自定义渲染函数h
