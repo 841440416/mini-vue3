@@ -20,6 +20,7 @@ export function createRenderer(renderOptions) {
     return child;
   }
 
+  // 递归渲染children
   const mountChildren = (children, container) => {
     for (let i = 0; i < children.length; i++) {
       let child = normalize(children[i])
@@ -27,6 +28,7 @@ export function createRenderer(renderOptions) {
     }
   };
 
+  // 渲染vnode
   const mountElement = (vnode, container) => {
     const { type, props, children, shapeFlag } = vnode;
     const el = (vnode.el = hostCreateElement(type));
@@ -45,12 +47,14 @@ export function createRenderer(renderOptions) {
     hostInsert(el, container);
   };
 
+  // 插入文本
   const processText = (n1, n2, container) => {
     if (n1 === null) {
       hostInsert((n2.el = hostCreateText(n2.children)), container);
     }
   };
 
+  // path vnode
   const patch = (n1, n2, container) => {
     if (n1 === n2) return;
     const { type, shapeFlag } = n2;
@@ -69,6 +73,7 @@ export function createRenderer(renderOptions) {
     }
   };
 
+  // 卸载vnode
   const unmount = (vnode) => { 
     hostRemove(vnode.el); // 删除元素
   }
