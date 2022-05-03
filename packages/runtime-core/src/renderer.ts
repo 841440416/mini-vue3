@@ -1,4 +1,5 @@
 import { ShapeFlags, isString } from "@vue/shared";
+import { getSequence } from "./sequence";
 import { creatVnode, isSameVnode, Text } from "./vnode";
 export function createRenderer(renderOptions) {
   const {
@@ -61,6 +62,27 @@ export function createRenderer(renderOptions) {
     }
   };
 
+  // 卸载儿子
+  const unmountChildren = (children) => {
+    for (let i = 0; i < children.length; i++) {
+      unmount(children[i]);
+    }
+  };
+
+  // 插入元素
+  const processElement = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountElement(n2, container, anchor);
+    } else {
+      patchElement(n1, n2);
+    }
+  };
+
+  // 卸载vnode
+  const unmount = (vnode) => {
+    hostRemove(vnode.el); // 删除元素
+  };
+
   // 比对属性
   const patchProps = (oldProps, newProps, el) => {
     for (let key in newProps) {
@@ -75,13 +97,68 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  // 卸载儿子
-  const unmountChildren = (children) => {
-    for (let i = 0; i < children.length; i++) {
-      unmount(children[i]);
+  // 比对节点
+  const patchElement = (n1, n2) => {
+    const el = (n2.el = n1.el);
+    const oldProps = n1.props || {};
+    const newProps = n2.props || {};
+    // 比较属性
+    patchProps(oldProps, newProps, el);
+    // 比较儿子
+    patchChildren(n1, n2, el);
+  };
+
+  // 比对儿子
+  const patchChildren = (n1, n2, el) => {
+    const c1 = n1 && n1.children;
+    const c2 = n2 && n2.children;
+    const prevShapeFlag = n1.shapeFlag; // 老的
+    const shapeFlag = n2.shapeFlag; // 新的
+    // 新的 ｜ 老的 ｜  说明
+    // ------------------------------------
+    // 文本 ｜ 数组 ｜ (删除老儿子，设置文本内容)
+    // ------------------------------------
+    // 文本 ｜ 文本 ｜ (更新文本)
+    // ------------------------------------
+    // 数组 ｜ 数组 ｜ (diff算法)
+    // ------------------------------------
+    // 数组 ｜ 文本 ｜ (清空文本，进行挂载)
+    // ------------------------------------
+    // 空   ｜ 数组 ｜ (删除所有儿子)
+    // ------------------------------------
+    // 空   ｜ 文本 ｜ (清空文本)
+
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 删除所有子节点
+        unmountChildren(c1); // 文本  数组
+      }
+      if (c1 !== c2) {
+        hostSetElementText(el, c2); // 文本  文本
+      }
+    } else {
+      // 新的为数组或空
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // 数组   数组
+          // diff 算法
+          patchKeyedChildren(c1, c2, el);
+        } else {
+          unmountChildren(c1); // 空   数组
+        }
+      } else {
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+          // 空 文本
+          hostSetElementText(el, "");
+        }
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          mountChildren(c2, el); // 数组  文本
+        }
+      }
     }
   };
 
+  // !🌟 diff算法核心
   const patchKeyedChildren = (c1, c2, el) => {
     let i = 0;
     let e1 = c1.length - 1;
@@ -151,6 +228,8 @@ export function createRenderer(renderOptions) {
     }
 
     // 移动位置
+    const increment = getSequence(newIndexToOldMapIndex) // 获取最长递增子序列
+    let j = increment.length - 1;
     for (let i = toBePatched - 1; i >= 0; i--) {
       const nextIndex = s2 + i; // [ecdh]   找到h的索引
       const nextChild = c2[nextIndex]; // 找到 h
@@ -159,85 +238,14 @@ export function createRenderer(renderOptions) {
         // 这是一个新元素 直接创建插入到 当前元素的下一个即可
         patch(null, nextChild, el, anchor);
       } else {
-        // 根据参照物 将节点直接移动过去  所有节点都要移动 （都做了道需插入，但是有些节点可以不动）
-        hostInsert(nextChild.el, el, anchor);
-      }
-    }
-  };
-
-  // 比对儿子
-  const patchChildren = (n1, n2, el) => {
-    const c1 = n1 && n1.children;
-    const c2 = n2 && n2.children;
-    const prevShapeFlag = n1.shapeFlag; // 老的
-    const shapeFlag = n2.shapeFlag; // 新的
-    // 新的 ｜ 老的 ｜  说明
-    // ------------------------------------
-    // 文本 ｜ 数组 ｜ (删除老儿子，设置文本内容)
-    // ------------------------------------
-    // 文本 ｜ 文本 ｜ (更新文本)
-    // ------------------------------------
-    // 数组 ｜ 数组 ｜ (diff算法)
-    // ------------------------------------
-    // 数组 ｜ 文本 ｜ (清空文本，进行挂载)
-    // ------------------------------------
-    // 空   ｜ 数组 ｜ (删除所有儿子)
-    // ------------------------------------
-    // 空   ｜ 文本 ｜ (清空文本)
-
-    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
-      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-        // 删除所有子节点
-        unmountChildren(c1); // 文本  数组
-      }
-      if (c1 !== c2) {
-        hostSetElementText(el, c2); // 文本  文本
-      }
-    } else {
-      // 新的为数组或空
-      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-          // 数组   数组
-          // diff 算法
-          patchKeyedChildren(c1, c2, el);
+        if(i !== increment[j]) {
+          hostInsert(nextChild.el, el, anchor);// 根据参照物 将节点直接移动过去
         } else {
-          unmountChildren(c1); // 空   数组
-        }
-      } else {
-        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
-          // 空 文本
-          hostSetElementText(el, "");
-        }
-        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-          mountChildren(c2, el); // 数组  文本
+          console.log('跳过不需要移动的元素');
+          j--; // 跳过不需要移动的元素， 为了减少移动操作 需要这个最长递增子序列算法 
         }
       }
     }
-  };
-
-  // 比对节点
-  const patchElement = (n1, n2) => {
-    const el = (n2.el = n1.el);
-    const oldProps = n1.props || {};
-    const newProps = n2.props || {};
-    // 比较属性
-    patchProps(oldProps, newProps, el);
-    // 比较儿子
-    patchChildren(n1, n2, el);
-  };
-
-  // 插入元素
-  const processElement = (n1, n2, container, anchor) => {
-    if (n1 === null) {
-      mountElement(n2, container, anchor);
-    } else {
-      patchElement(n1, n2);
-    }
-  };
-
-  // 卸载vnode
-  const unmount = (vnode) => {
-    hostRemove(vnode.el); // 删除元素
   };
 
   //! path vnode
