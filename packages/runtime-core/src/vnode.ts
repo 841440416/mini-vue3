@@ -3,6 +3,9 @@ export const Text = Symbol("Text");
 export function isVnode(value) {
   return !!(value && value.__v_isVNode);
 }
+export function isSameVnode(n1, n2) {
+  return( n1.type === n2.type) && (n1.key === n2.key)
+}
 
 /**
  * 创建vnode,虚拟节点有很多：组件、文本、元素
