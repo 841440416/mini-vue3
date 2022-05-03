@@ -1,35 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
-<body>
-  <div id="app"></div>
-  <script src="./runtime-dom.global.js"></script>
-  <script>
-    let { createRenderer, render, h, Text } = VueRuntimeDOM
-    // 渲染虚拟dom
-    // const renderer = createRenderer({
-    //   createElement(el) {
-    //     return document.createElement(el)
-    //   },
-    //   setElementText(el, text) {
-    //     el.innerHTML = text
-    //   },
-    //   insert(el, container) {
-    //     container.appendChild(el)
-    //   },
-    //   pathProp(el, key, preVal, nextVal) {
-    //     console.log(el, key, nextVal);
-    //   }
-    // })
-    render(h('h1', {style:{color: 'red'},onClick:()=>alert(1)},'111'), app)
-    setTimeout(()=>{
-      render(h('h1', {style:{color: 'blue', background: 'red'},onClick:()=>alert(1)},[h('span', 'world')]), app)
-    }, 1000)
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="./runtime-dom.global.js"></script>
+    <script>
+      let { createRenderer, render, h, Text } = VueRuntimeDOM;
+      // 渲染虚拟dom
+      // const renderer = createRenderer({
+      //   createElement(el) {
+      //     return document.createElement(el)
+      //   },
+      //   setElementText(el, text) {
+      //     el.innerHTML = text
+      //   },
+      //   insert(el, container) {
+      //     container.appendChild(el)
+      //   },
+      //   pathProp(el, key, preVal, nextVal) {
+      //     console.log(el, key, nextVal);
+      //   }
+      // })
+      render(
+        h("h1", { style: { color: "red" } }, [
+          h("li", {key: 'd'}, "d"),
+          h("li", {key: 'a'}, "a"),
+          h("li", {key: 'b'}, "b"),
+          h("li", {key: 'c'}, "c"),
+        ]),
+        app
+      );
+      setTimeout(() => {
+        render(
+          h("h1", { style: { color: "blue", background: "red" } }, [
+            h("li", {key: 'a'}, "a"),
+            h("li", {key: 'b'}, "b"),
+            h("li", {key: 'c'}, "c"),
+          ]),
+          app
+        );
+      }, 1000);
+    </script>
+  </body>
 </html>
